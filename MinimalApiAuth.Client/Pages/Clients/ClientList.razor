@@ -1,0 +1,96 @@
+﻿@page "/clients"
+@attribute [Authorize]
+@inject HttpClient httpClient
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@if (Clients == null)
+{
+    <p>
+        Loading data...
+    </p>
+}
+else
+{
+    <PaginationComponent TItem="Domain.Client" Items="Clients" DefaultPageSize="10">
+        <ChildContentHeader>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th></th>
+            </tr>
+        </ChildContentHeader>
+        <ChildContentRow Context="client">
+            <tr>
+                <td><a href="/clients/record/@client.Id">@client.Id</a></td>
+                <td>
+                    <a href="/clients/record/@client.Id">
+                        @((client.LastName + " " + @client.FirstName).Trim())
+                    </a>
+                </td>
+                <td>
+                    @if (!string.IsNullOrEmpty(client.Email))
+                    {
+                        <a href="mailto:@client.Email">@client.Email</a>
+                    }
+                </td>
+                <td>
+                </td>
+            </tr>
+        </ChildContentRow>
+        <NoDataContent>
+            <tr>
+                <td colspan="4">
+                    <div class="items-center">
+                        <img alt="No data" src="img/nodata.svg" class="max-width: 50px;" />
+                        <p>
+                            No client found for now. Do you want to add a new client?
+                            <a href="/clients/new">Click here</a>
+                        </p>
+                    </div>
+                </td>
+            </tr>
+        </NoDataContent>
+    </PaginationComponent>
+}
+
+@code {
+    public List<Client>? Clients { get; set; }
+    public string? user;
+    public string? searchText { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        user = authState?.User?.Identity?.Name;
+
+        await GetClients();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await GetClients();
+    }
+
+    public async Task GetClients()
+    {
+        if (string.IsNullOrEmpty(user))
+        {
+            Clients = null;
+            return;
+        }
+
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"/api/Client");
+        HttpResponseMessage responseMessage = await httpClient.SendAsync(request);
+        responseMessage.EnsureSuccessStatusCode();
+        Clients = await responseMessage.Content.ReadFromJsonAsync<List<Domain.Client>>();
+        StateHasChanged();
+    }
+
+    public async Task OnSearchClicked(string txt)
+    {
+        searchText = txt;
+        await GetClients();
+    }
+}

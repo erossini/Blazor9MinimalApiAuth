@@ -1,0 +1,59 @@
+﻿@page "/clients2/create"
+@using Microsoft.EntityFrameworkCore
+@using MinimalApiAuth.Domain
+@inject IDbContextFactory<MinimalApiAuth.Persistence.AppDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>Client</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Client" OnValidSubmit="AddClient" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <label for="firstname" class="form-label">FirstName:</label> 
+                <InputText id="firstname" @bind-Value="Client.FirstName" class="form-control" /> 
+                <ValidationMessage For="() => Client.FirstName" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="lastname" class="form-label">LastName:</label> 
+                <InputText id="lastname" @bind-Value="Client.LastName" class="form-control" /> 
+                <ValidationMessage For="() => Client.LastName" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="email" class="form-label">Email:</label> 
+                <InputText id="email" @bind-Value="Client.Email" class="form-control" aria-required="true"/> 
+                <ValidationMessage For="() => Client.Email" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="phone" class="form-label">Phone:</label> 
+                <InputText id="phone" @bind-Value="Client.Phone" class="form-control" /> 
+                <ValidationMessage For="() => Client.Phone" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/clients">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Client Client { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddClient()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Clients.Add(Client);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/clients");
+    }
+}

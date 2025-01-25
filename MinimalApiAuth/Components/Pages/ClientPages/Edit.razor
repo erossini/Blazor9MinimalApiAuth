@@ -1,0 +1,104 @@
+﻿@page "/clients2/edit"
+@using Microsoft.EntityFrameworkCore
+@using MinimalApiAuth.Domain
+@inject IDbContextFactory<MinimalApiAuth.Persistence.AppDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Client</h2>
+<hr />
+@if (Client is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Client" OnValidSubmit="UpdateClient" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="Client.Id" value="@Client.Id" />
+                <div class="mb-3">
+                    <label for="firstname" class="form-label">FirstName:</label>
+                    <InputText id="firstname" @bind-Value="Client.FirstName" class="form-control" />
+                    <ValidationMessage For="() => Client.FirstName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="lastname" class="form-label">LastName:</label>
+                    <InputText id="lastname" @bind-Value="Client.LastName" class="form-control" />
+                    <ValidationMessage For="() => Client.LastName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email:</label>
+                    <InputText id="email" @bind-Value="Client.Email" class="form-control" aria-required="true"/>
+                    <ValidationMessage For="() => Client.Email" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Phone:</label>
+                    <InputText id="phone" @bind-Value="Client.Phone" class="form-control" />
+                    <ValidationMessage For="() => Client.Phone" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/clients">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private long Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private Client? Client { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Client ??= await context.Clients.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Client is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateClient()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Client!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!ClientExists(Client!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/clients");
+    }
+
+    private bool ClientExists(long id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Clients.Any(e => e.Id == id);
+    }
+}

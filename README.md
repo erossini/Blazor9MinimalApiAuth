@@ -160,6 +160,10 @@ app.MapClientEndpoints();
 
 After that, I can use the procedure and create a new minimal APIs. After the creation, I can remove the comments and the application will work normally.
 
+## Step 3
+
+
+
 ---
     
 ## PureSourceCode.com
