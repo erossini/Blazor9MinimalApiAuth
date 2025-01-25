@@ -12,6 +12,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other files", "Other files"
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinimalApiAuth.Domain", "MinimalApiAuth.Domain\MinimalApiAuth.Domain.csproj", "{01DE6D2A-3B83-4F30-8930-39FF41A5C04A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinimalApiAuth.Persistence", "MinimalApiAuth.Persistence\MinimalApiAuth.Persistence.csproj", "{7E1C4521-D3A2-4E9D-B218-42BC05FABCEA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +30,14 @@ Global
 		{374C8D30-44A9-4523-882F-9705D4457BA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{374C8D30-44A9-4523-882F-9705D4457BA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{374C8D30-44A9-4523-882F-9705D4457BA7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01DE6D2A-3B83-4F30-8930-39FF41A5C04A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01DE6D2A-3B83-4F30-8930-39FF41A5C04A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01DE6D2A-3B83-4F30-8930-39FF41A5C04A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01DE6D2A-3B83-4F30-8930-39FF41A5C04A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E1C4521-D3A2-4E9D-B218-42BC05FABCEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E1C4521-D3A2-4E9D-B218-42BC05FABCEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E1C4521-D3A2-4E9D-B218-42BC05FABCEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E1C4521-D3A2-4E9D-B218-42BC05FABCEA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -4,6 +4,11 @@ This is a basic project in `NET9` and `Blazor` with minimal APIs protected by *I
 
 The version of `NET8` is available in this [repository](https://github.com/erossini/Blazor8MinimalApiAuth).
 
+## Scenario
+
+In this project, I want to display and edit a client record and the address. All the interactions with the database must be through the APIs and 
+the APIs require the user authentication in order to return a valid list of data.
+
 ## Step 1
 
 The solution created out-of-the-box from the Visual Studio template is not creating the structure for the Identity in the database. 
@@ -49,11 +54,111 @@ In the server project, I add _Serilog_ for the logs and configure to save them i
 Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Console()
-                .WriteTo.File("logs/hypno-.txt", rollingInterval: RollingInterval.Day)
+                .WriteTo.File("logs/net9demo-.txt", rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
 builder.Services.AddSerilog();
 ```
+
+## Step 2
+
+In this next step, I want to add the connection with the database and add the APIs to save and retrieve data from the database using the APIs.
+To achieve that, I explain in small parts every single activity or project and then how to put everything together.
+
+I like to build the project using [Clean Architecture](https://puresourcecode.com/dotnet/net-core/architecting-asp-net-core-applications/). 
+I have created a few posts where I discussed how to do it with [ASP.NET Core](https://puresourcecode.com/tag/aspnet-core/).
+Using this concepts, I am going to create this project.
+
+### Add Entity Framework Core
+
+The solution uses the database for saving the data. For this reason, we need *Entity Framework Core* to be added to several projects.
+In the server project _MinimalApiAuth_, add the following packages:
+
+- Microsoft.EntityFrameworkCore
+- Microsoft.EntityFrameworkCore.Design
+- Microsoft.EntityFrameworkCore.SqlServer
+- Microsoft.EntityFrameworkCore.Tools
+
+I will use those packages in the other projects in this solution.
+
+### Add the Domain layer
+
+The *Domain* layer is where I define the basic models for the data I will use across the application. Usually, a project based on `.NET Standard` is created.
+For this project, the models will be used only in other `NET9` projects: so, I use `NET9` for all the projects.
+
+I create a new project called `MinimalApiAuth.Domain` and then I add 2 new classes:
+
+- *Client*: this is the model for the basic data for a client
+- *ClientAddress*: each client can have one or more address
+
+Each of those model, starts with the *Table* attribute to name the table in the database. Using `System.Text.Json`, I define the name of each
+field in the `json`.
+
+Now, I have to add some NuGet dependencies to the solution in order to add *Entity Framework Core* version `9.0.1`.
+
+### Add the Persistence layer
+
+The *Persistence* layer defines the connections with the database and everything related to that. I create a new project called `MinimalApiAuth.Persistence`.
+For the purpose of this project, I am going to add a new project where I define the `DbContext` using *Entity Framework Core* and 
+the registration of the context to use in the main project.
+
+For this reason, I add the package `Microsoft.Extensions.Configuration` to read the configuration for the main project. Also, this project depends on the *Domain* project.
+Also, this project is added as dependency in the main project `MinimalApiAuth`.
+
+#### AddDbContext
+
+Here is where I define the tables based on *Entity Framework Core*. Every table is based on the *Domain* models.
+
+#### PersistenceServiceRegistration
+
+This is an extension for `IServiceCollection` to add the configuration for the database. Using this extension, in the _Program.cs_ of the main project _MinimalApiAuth_,
+I can add this line
+
+```csharp
+builder.Services.AddAppPersistenceServices(builder.Configuration);
+```
+
+to add include the settings in the dependency injection of the solution. Using the extension for *Entity Framework Core*, I read the connection configuration for the _appsettings.json_
+and configure the SQL Server connection. The default key is `DefaultConnection` created by default.
+
+### Add Migration
+
+Now, I can create the migration for this database and its tables. Because I want to creat the `Migrations` folder and files in the `Persistence` project,
+I add a new file called `AppDbContextFactory` to set the default connection only for the creation of the migration. Once the migration is created, I have to *Exclude* this file from the project.
+If I have to create a new migration, I will include the file in the project again.
+
+After that, I open the *Package Manager Console* and run the following command:
+
+```powershell
+add-migration InitialMigration -Context AppDbContext
+```
+
+After a successful building for the solution, this is creating the migration for the `AppDbContext`. In order to automatically run the migration form the main project,
+I add the code to check if there is any pending migration in the _Program.cs_ or the main project as I did for the `ApplicationDbContext` above.
+
+## Add endpoints
+
+Using *Scaffolded Item* in Visual Studio, I add the first endpoint for `Client`. This is going to create a minimal API for the mayor HTTP verbs.
+In the code, I add the `RequireAuthorization` to allow only authorized users to use the APIs. An example of the is the `GET` for the `Clients`:
+
+```csharp
+group.MapGet("/", async (AppDbContext db) =>
+{
+    return await db.Clients.ToListAsync();
+})
+.RequireAuthorization()
+.WithName("GetAllClients")
+.WithOpenApi();
+```
+
+If I want to add another endpoint for the `ClientAddress`, the *Scaffolded Item* procedure fails because there is a conflict with the one I have already created.
+So, I'm going to comment in the _Program.cs_ of the server project
+
+```csharp
+app.MapClientEndpoints();
+```
+
+After that, I can use the procedure and create a new minimal APIs. After the creation, I can remove the comments and the application will work normally.
 
 ---
     
