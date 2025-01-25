@@ -5,8 +5,21 @@ using MinimalApiAuth.Client.Pages;
 using MinimalApiAuth.Components;
 using MinimalApiAuth.Components.Account;
 using MinimalApiAuth.Data;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+#region Serilog
+
+Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Console()
+                .WriteTo.File("logs/net9demo-.txt", rollingInterval: RollingInterval.Day)
+                .CreateLogger();
+
+builder.Services.AddSerilog();
+
+#endregion Serilog
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -32,6 +45,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
@@ -55,7 +69,6 @@ else
 
 app.UseHttpsRedirection();
 
-
 app.UseAntiforgery();
 
 app.MapStaticAssets();
@@ -66,5 +79,26 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+
+#region Database
+
+// Create the database if it does not exist
+using (var scope = app.Services.CreateScope())
+{
+    var service = scope.ServiceProvider;
+    var context = service.GetService<ApplicationDbContext>();
+
+    try
+    {
+        context?.Database?.EnsureCreated();
+        context?.Database?.Migrate();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.ToString());
+    }
+}
+
+#endregion
 
 app.Run();

@@ -4,6 +4,57 @@ This is a basic project in `NET9` and `Blazor` with minimal APIs protected by *I
 
 The version of `NET8` is available in this [repository](https://github.com/erossini/Blazor8MinimalApiAuth).
 
+## Step 1
+
+The solution created out-of-the-box from the Visual Studio template is not creating the structure for the Identity in the database. 
+So, from the _Package Manager Console_ run the command
+
+```powershell
+update-database
+```
+
+### Migration from the code
+
+The idea for this repository is to have a full working solution with some APIs protected with the *Individual Accounts* to use as a template project.
+For this reason, I don't want to run any command but the application has to sort it out by itself. 
+
+In the _Program.cs_, I am going to add the code to verify if the database is created and if the migration are applied. 
+This code has to be added after the creation of the `app`.
+
+```csharp
+using (var scope = app.Services.CreateScope())
+{
+    var service = scope.ServiceProvider;
+    var context = service.GetService<ApplicationDbContext>();
+
+    try
+    {
+        context?.Database?.EnsureCreated();
+        context?.Database?.Migrate();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.ToString());
+    }
+}
+```
+
+With this code, the application will check every time if there is any update to the structure to apply and automatically run the code.
+
+### Add logs with Serilog
+
+In the server project, I add _Serilog_ for the logs and configure to save them in the `logs` folder with a generic name that contains the date.
+
+```csharp
+Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Console()
+                .WriteTo.File("logs/hypno-.txt", rollingInterval: RollingInterval.Day)
+                .CreateLogger();
+
+builder.Services.AddSerilog();
+```
+
 ---
     
 ## PureSourceCode.com
