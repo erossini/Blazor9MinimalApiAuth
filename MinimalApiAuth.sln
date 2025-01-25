@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinimalApiAuth", "MinimalApiAuth\MinimalApiAuth.csproj", "{5D259A57-3FFC-436D-80A8-E9521E1E1D23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinimalApiAuth.Client", "MinimalApiAuth.Client\MinimalApiAuth.Client.csproj", "{374C8D30-44A9-4523-882F-9705D4457BA7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5D259A57-3FFC-436D-80A8-E9521E1E1D23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D259A57-3FFC-436D-80A8-E9521E1E1D23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D259A57-3FFC-436D-80A8-E9521E1E1D23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D259A57-3FFC-436D-80A8-E9521E1E1D23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{374C8D30-44A9-4523-882F-9705D4457BA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{374C8D30-44A9-4523-882F-9705D4457BA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{374C8D30-44A9-4523-882F-9705D4457BA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{374C8D30-44A9-4523-882F-9705D4457BA7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
