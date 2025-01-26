@@ -1,8 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.OpenApi;
-using MinimalApiAuth.Domain;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 using MinimalApiAuth.Persistence;
+
 namespace MinimalApiAuth.Endpoints;
 
 public static class ClientEndpoints
@@ -36,7 +35,6 @@ public static class ClientEndpoints
             var affected = await db.Clients
                 .Where(model => model.Id == id)
                 .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(m => m.Id, client.Id)
                     .SetProperty(m => m.FirstName, client.FirstName)
                     .SetProperty(m => m.LastName, client.LastName)
                     .SetProperty(m => m.Email, client.Email)

@@ -1,0 +1,66 @@
+﻿@page "/clients/view/{Id:long}"
+@attribute [Authorize]
+@inject HttpClient httpClient
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Client Details</PageTitle>
+
+<h1>Client Details</h1>
+
+<div>
+    <h2>Client</h2>
+    <hr />
+    @if (client is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <dl class="row">
+            <dt class="col-sm-2">FirstName</dt>
+            <dd class="col-sm-10">@client.FirstName</dd>
+            <dt class="col-sm-2">LastName</dt>
+            <dd class="col-sm-10">@client.LastName</dd>
+            <dt class="col-sm-2">Email</dt>
+            <dd class="col-sm-10">@client.Email</dd>
+            <dt class="col-sm-2">Phone</dt>
+            <dd class="col-sm-10">@client.Phone</dd>
+        </dl>
+        <div>
+            <a href="@($"/clients/edit/{client.Id}")">Edit</a> |
+            <a href="@($"/clients/delete/{client.Id}")">Delete</a> |
+            <a href="@($"/clients")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Client? client;
+    private string? user;
+
+    [Parameter]
+    public long Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        user = authState?.User?.Identity?.Name;
+
+        await GetClient();
+    }
+
+    public async Task GetClient()
+    {
+        if (string.IsNullOrEmpty(user))
+        {
+            client = null;
+            return;
+        }
+
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"/api/Client/{Id}");
+        HttpResponseMessage responseMessage = await httpClient.SendAsync(request);
+        responseMessage.EnsureSuccessStatusCode();
+        client = await responseMessage.Content.ReadFromJsonAsync<Domain.Client>();
+        StateHasChanged();
+    }
+}

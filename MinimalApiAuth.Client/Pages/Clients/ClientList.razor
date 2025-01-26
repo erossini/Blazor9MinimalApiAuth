@@ -22,9 +22,9 @@ else
         </ChildContentHeader>
         <ChildContentRow Context="client">
             <tr>
-                <td><a href="/clients/record/@client.Id">@client.Id</a></td>
+                <td><a href="/clients/view/@client.Id">@client.Id</a></td>
                 <td>
-                    <a href="/clients/record/@client.Id">
+                    <a href="/clients/view/@client.Id">
                         @((client.LastName + " " + @client.FirstName).Trim())
                     </a>
                 </td>
@@ -86,11 +86,5 @@ else
         responseMessage.EnsureSuccessStatusCode();
         Clients = await responseMessage.Content.ReadFromJsonAsync<List<Domain.Client>>();
         StateHasChanged();
-    }
-
-    public async Task OnSearchClicked(string txt)
-    {
-        searchText = txt;
-        await GetClients();
     }
 }

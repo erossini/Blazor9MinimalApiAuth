@@ -1,15 +1,27 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using MinimalApiAuth.Client.Pages;
 using MinimalApiAuth.Components;
 using MinimalApiAuth.Components.Account;
 using MinimalApiAuth.Data;
+using MinimalApiAuth.Endpoints;
 using MinimalApiAuth.Persistence;
 using Serilog;
-using MinimalApiAuth.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
+
+#region HttpClient
+
+builder.Services
+    .AddScoped(sp => sp
+        .GetRequiredService<IHttpClientFactory>()
+        .CreateClient("ServerAPI"))
+        .AddHttpClient("ServerAPI", (provider, client) =>
+        {
+            client.BaseAddress = new Uri("https://localhost:7130");
+        });
+
+#endregion HttpClient
 
 #region Serilog
 
@@ -62,19 +74,6 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
 
-#region HttpClient
-
-builder.Services
-    .AddScoped(sp => sp
-        .GetRequiredService<IHttpClientFactory>()
-        .CreateClient("ServerAPI"))
-        .AddHttpClient("ServerAPI", (provider, client) =>
-        {
-            client.BaseAddress = new Uri("https://localhost:7130");
-        });
-
-#endregion
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -107,9 +106,6 @@ app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(MinimalApiAuth.Client._Imports).Assembly);
 
-// Add additional endpoints required by the Identity /Account Razor components.
-app.MapAdditionalIdentityEndpoints();
-
 #region Database
 
 // Create the database if it does not exist
@@ -128,11 +124,6 @@ using (var scope = app.Services.CreateScope())
     {
         Console.WriteLine(ex.ToString());
     }
-}
-
-using (var scope = app.Services.CreateScope())
-{
-    var service = scope.ServiceProvider;
 
     // Apply changes for the application domain
     var appContext = service.GetService<AppDbContext>();
@@ -146,9 +137,12 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+#endregion Database
+
+// Add additional endpoints required by the Identity /Account Razor components.
+app.MapAdditionalIdentityEndpoints();
+
 app.MapClientEndpoints();
 app.MapClientAddressEndpoints();
-
-#endregion
 
 app.Run();

@@ -1,8 +1,12 @@
-﻿@page "/clients2/edit"
-@using Microsoft.EntityFrameworkCore
+﻿@page "/clients/edit/{Id:long}"
+@attribute [Authorize]
 @using MinimalApiAuth.Domain
-@inject IDbContextFactory<MinimalApiAuth.Persistence.AppDbContext> DbFactory
+@using System.Text.Json
+@using System.Text
+@inject HttpClient httpClient
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@rendermode InteractiveServer
 
 <PageTitle>Edit</PageTitle>
 
@@ -20,7 +24,7 @@ else
         <div class="col-md-4">
             <EditForm method="post" Model="Client" OnValidSubmit="UpdateClient" FormName="edit" Enhance>
                 <DataAnnotationsValidator />
-                <ValidationSummary role="alert"/>
+                <ValidationSummary role="alert" />
                 <input type="hidden" name="Client.Id" value="@Client.Id" />
                 <div class="mb-3">
                     <label for="firstname" class="form-label">FirstName:</label>
@@ -34,7 +38,7 @@ else
                 </div>
                 <div class="mb-3">
                     <label for="email" class="form-label">Email:</label>
-                    <InputText id="email" @bind-Value="Client.Email" class="form-control" aria-required="true"/>
+                    <InputText id="email" @bind-Value="Client.Email" class="form-control" aria-required="true" />
                     <ValidationMessage For="() => Client.Email" class="text-danger" />
                 </div>
                 <div class="mb-3">
@@ -53,20 +57,29 @@ else
 </div>
 
 @code {
-    [SupplyParameterFromQuery]
-    private long Id { get; set; }
+    [Parameter]
+    public long Id { get; set; }
+
+    public string? user;
 
     [SupplyParameterFromForm]
     private Client? Client { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        Client ??= await context.Clients.FirstOrDefaultAsync(m => m.Id == Id);
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        user = authState?.User?.Identity?.Name;
+    }
 
-        if (Client is null)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
         {
-            NavigationManager.NavigateTo("notfound");
+            Client = await GetClient();
+            if (Client is null)
+                NavigationManager.NavigateTo("notfound");
+
+            StateHasChanged();
         }
     }
 
@@ -74,31 +87,30 @@ else
     // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task UpdateClient()
     {
-        using var context = DbFactory.CreateDbContext();
-        context.Attach(Client!).State = EntityState.Modified;
+        if (string.IsNullOrEmpty(user))
+        {
+            Client = null;
+            return;
+        }
 
-        try
-        {
-            await context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!ClientExists(Client!.Id))
-            {
-                NavigationManager.NavigateTo("notfound");
-            }
-            else
-            {
-                throw;
-            }
-        }
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, $"/api/Client/{Id}");
+
+        string json = JsonSerializer.Serialize(Client);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        request.Content = content;
+
+        HttpResponseMessage responseMessage = await httpClient.SendAsync(request);
+        responseMessage.EnsureSuccessStatusCode();
 
         NavigationManager.NavigateTo("/clients");
     }
 
-    private bool ClientExists(long id)
+    public async Task<Domain.Client?> GetClient()
     {
-        using var context = DbFactory.CreateDbContext();
-        return context.Clients.Any(e => e.Id == id);
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"/api/Client/{Id}");
+        HttpResponseMessage responseMessage = await httpClient.SendAsync(request);
+        responseMessage.EnsureSuccessStatusCode();
+        var response = await responseMessage.Content.ReadFromJsonAsync<Domain.Client>();
+        return response;
     }
 }
