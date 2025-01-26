@@ -3,7 +3,12 @@
 @inject HttpClient httpClient
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-@if (Clients == null)
+@if(!string.IsNullOrEmpty(errorMessage)) {
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+else if (Clients == null)
 {
     <p>
         Loading data...
@@ -58,6 +63,7 @@ else
     public List<Client>? Clients { get; set; }
     public string? user;
     public string? searchText { get; set; }
+    public string? errorMessage { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -81,10 +87,19 @@ else
             return;
         }
 
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"/api/Client");
-        HttpResponseMessage responseMessage = await httpClient.SendAsync(request);
-        responseMessage.EnsureSuccessStatusCode();
-        Clients = await responseMessage.Content.ReadFromJsonAsync<List<Domain.Client>>();
+        try
+        {
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"/api/Client");
+            HttpResponseMessage responseMessage = await httpClient.SendAsync(request);
+            responseMessage.EnsureSuccessStatusCode();
+            Clients = await responseMessage.Content.ReadFromJsonAsync<List<Domain.Client>>();
+
+            errorMessage = string.Empty;
+        }
+        catch(Exception ex) {
+            errorMessage = $"Loading error: {ex.Message}";
+        }
+
         StateHasChanged();
     }
 }

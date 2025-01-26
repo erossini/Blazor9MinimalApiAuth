@@ -10,19 +10,6 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-#region HttpClient
-
-builder.Services
-    .AddScoped(sp => sp
-        .GetRequiredService<IHttpClientFactory>()
-        .CreateClient("ServerAPI"))
-        .AddHttpClient("ServerAPI", (provider, client) =>
-        {
-            client.BaseAddress = new Uri("https://localhost:7130");
-        });
-
-#endregion HttpClient
-
 #region Serilog
 
 Log.Logger = new LoggerConfiguration()
@@ -73,6 +60,19 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
+
+#region HttpClient
+
+builder.Services
+    .AddScoped(sp => sp
+        .GetRequiredService<IHttpClientFactory>()
+        .CreateClient("ServerAPI"))
+        .AddHttpClient("ServerAPI", (provider, client) =>
+        {
+            client.BaseAddress = new Uri("https://localhost:7130");
+        });
+
+#endregion HttpClient
 
 var app = builder.Build();
 
