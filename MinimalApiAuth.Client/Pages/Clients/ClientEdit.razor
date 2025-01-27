@@ -6,7 +6,7 @@
 @inject HttpClient httpClient
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@rendermode InteractiveServer
+@rendermode InteractiveWebAssembly
 
 <PageTitle>Edit</PageTitle>
 
@@ -14,9 +14,17 @@
 
 <h2>Client</h2>
 <hr />
-@if (Client is null)
+@if (!string.IsNullOrEmpty(errorMessage))
 {
-    <p><em>Loading...</em></p>
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+else if (Client == null)
+{
+    <p>
+        Loading data...
+    </p>
 }
 else
 {
@@ -61,6 +69,7 @@ else
     public long Id { get; set; }
 
     public string? user;
+    public string? errorMessage;
 
     [SupplyParameterFromForm]
     private Client? Client { get; set; }
@@ -105,12 +114,31 @@ else
         NavigationManager.NavigateTo("/clients");
     }
 
-    public async Task<Domain.Client?> GetClient()
+    public async Task<Client> GetClient()
     {
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"/api/Client/{Id}");
-        HttpResponseMessage responseMessage = await httpClient.SendAsync(request);
-        responseMessage.EnsureSuccessStatusCode();
-        var response = await responseMessage.Content.ReadFromJsonAsync<Domain.Client>();
-        return response;
+        if (string.IsNullOrEmpty(user))
+        {
+            Client = null;
+            return null;
+        }
+
+        Client rtn = null;
+        try
+        {
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"/api/Client/{Id}");
+            HttpResponseMessage responseMessage = await httpClient.SendAsync(request);
+            responseMessage.EnsureSuccessStatusCode();
+            rtn = await responseMessage.Content.ReadFromJsonAsync<Domain.Client>();
+
+            errorMessage = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Loading error: {ex.Message}";
+        }
+
+        StateHasChanged();
+
+        return rtn;
     }
 }

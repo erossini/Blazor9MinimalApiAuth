@@ -2,6 +2,7 @@
 @attribute [Authorize]
 @inject HttpClient httpClient
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@rendermode InteractiveWebAssembly
 
 <PageTitle>Client Details</PageTitle>
 
@@ -45,8 +46,12 @@
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         user = authState?.User?.Identity?.Name;
+    }
 
-        await GetClient();
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await GetClient();
     }
 
     public async Task GetClient()
