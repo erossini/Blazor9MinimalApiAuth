@@ -5,6 +5,7 @@
 @inject HttpClient httpClient
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@rendermode InteractiveWebAssembly
 
 <PageTitle>Delete</PageTitle>
 
@@ -48,20 +49,49 @@
 
     private Client? client;
 
+    public string? user;
+    public string? errorMessage;
+
     protected override async Task OnInitializedAsync()
     {
-        client = await GetClient();
-        if (client is null)
-            NavigationManager.NavigateTo("notfound");
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        user = authState?.User?.Identity?.Name;
     }
 
-    public async Task<Domain.Client?> GetClient()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"/api/Client/{Id}");
-        HttpResponseMessage responseMessage = await httpClient.SendAsync(request);
-        responseMessage.EnsureSuccessStatusCode();
-        var response = await responseMessage.Content.ReadFromJsonAsync<Domain.Client>();
-        return response;
+        if(firstRender) {
+            client = await GetClient();
+            if (client is null)
+                NavigationManager.NavigateTo("notfound");
+
+            StateHasChanged();
+        }
+    }
+
+    public async Task<Client> GetClient()
+    {
+        if (string.IsNullOrEmpty(user))
+            return null;
+
+        Client rtn = null;
+        try
+        {
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"/api/Client/{Id}");
+            HttpResponseMessage responseMessage = await httpClient.SendAsync(request);
+            responseMessage.EnsureSuccessStatusCode();
+            rtn = await responseMessage.Content.ReadFromJsonAsync<Domain.Client>();
+
+            errorMessage = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Loading error: {ex.Message}";
+        }
+
+        StateHasChanged();
+
+        return rtn;
     }
 
     private async Task DeleteClient()
